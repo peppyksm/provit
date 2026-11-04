@@ -19,13 +19,13 @@
 		TO_CHAR(S.STUDY_CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS studyCreateDate,
 		(SELECT COUNT(*) FROM T_STUDY_MEMBER M WHERE M.STUDY_NUM = S.STUDY_NUM) AS
 		memberCount,
-		<if test="value != null">
+		<if test="_parameter != null">
 			CASE WHEN EXISTS (
 			SELECT 1 FROM T_STUDY_MEMBER M2
-			WHERE M2.STUDY_NUM = S.STUDY_NUM AND M2.USER_NUM = #{value}
+			WHERE M2.STUDY_NUM = S.STUDY_NUM AND M2.USER_NUM = #{_parameter}
 			) THEN 1 ELSE 0 END AS isJoined
 		</if>
-		<if test="value == null">
+		<if test="_parameter == null">
 			0 AS isJoined
 		</if>
 		FROM
