@@ -1,4 +1,4 @@
-import client from './client';
+import client from './client.js';
 
 /**
  * 공통 파일 업로드 API 모듈
@@ -31,6 +31,6 @@ export const uploadFile = async (file, category, targetId = null) => {
  * @param {string} savedFileName - 삭제할 저장 파일명
  */
 export const deleteFile = async (category, savedFileName) => {
-    const response = await client.delete(`/upload/${category}/${savedFileName}`);
+    const response = await client.delete(`/upload/${category}/${encodeURIComponent(savedFileName)}`);
     return response.data;
 };

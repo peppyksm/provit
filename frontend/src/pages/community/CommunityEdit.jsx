@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from 'rehype-sanitize';
+import { savePostAttachment } from './postAttachment';
 
 const CATEGORIES = [
     { id: 1, name: '질문' },
@@ -150,39 +151,15 @@ function CommunityEdit() {
 
         setLoading(true);
         try {
-            let finalPostFile = formData.postFile;
-
-            // 1. 새로운 파일이 선택되었다면 업로드
-            if (file) {
-                const uploadResult = await uploadFile(file, 'post', postNum);
-                finalPostFile = uploadResult.savedFileName;
-                
-                // 새로운 파일 업로드 성공 후, 기존 파일이 있었다면 서버에서 삭제 처리
-                if (originalPostFile) {
-                    try {
-                        await deleteFile('post', originalPostFile);
-                    } catch (deleteError) {
-                        console.error("기존 첨부파일 삭제 실패:", deleteError);
-                    }
-                }
-            } else if (deleteExistingFile && originalPostFile) {
-                // 2. 새로운 파일은 없지만 사용자가 기존 파일을 삭제 요청한 경우
-                finalPostFile = ''; // DB 업데이트 시 null 처리하기 위해 빈 문자열
-                try {
-                    await deleteFile('post', originalPostFile);
-                } catch (e) {
-                    console.error("기존 첨부파일 삭제 실패:", e);
-                }
-            }
-
             const postDto = {
                 ...formData,
                 postNum: postNum, // 수정할 글 번호 필수 포함
-                postFile: finalPostFile, // 업로드된 파일명 (또는 기존 파일명) 덮어쓰기
                 userNum: user.userNum
             };
 
-            const result = await updatePost(postDto);
+            const result = await savePostAttachment({
+                post: postDto, file, originalPostFile, removeAttachment: deleteExistingFile,
+            }, { uploadFile, updatePost, deleteFile, fetchPostDetail });
             if (result && result.responseCode && result.responseCode.code === 200) {
                 showToast('게시글이 성공적으로 수정되었습니다.', 'success');
                 setIsDirty(false); // 서밋 성공 시 경고 해제
@@ -192,7 +169,10 @@ function CommunityEdit() {
             }
         } catch (error) {
             const message = error.response?.data?.data;
-            showAlert(typeof message === 'string' ? message : '서버와의 통신 오류가 발생했습니다.', { type: 'error' });
+            const fallbackMessage = error.attachmentSaveUncertain
+                ? '저장 결과를 확인하지 못했습니다. 첨부파일을 보존했으니 게시글의 저장 상태를 확인해 주세요.'
+                : error.message || '서버와의 통신 오류가 발생했습니다.';
+            showAlert(typeof message === 'string' ? message : fallbackMessage, { type: 'error' });
         } finally {
             setLoading(false);
         }
