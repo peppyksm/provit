@@ -133,10 +133,11 @@ public class JwtProvider {
                 return false;
             }
 
-            // 서버 재시작 뒤에도 유지되는 DB 버전으로 토큰을 검증한다.
+            // 기존 로그인과 토큰 갱신에도 현재 DB의 정지 상태를 즉시 반영한다.
             UserDTO user = userDAO.selectByUserNum(userNum);
             return user != null
                     && (user.getUserIsDeleted() == null || user.getUserIsDeleted() == 0)
+                    && (user.getBlockedDate() == null || !user.getBlockedDate().after(new Date()))
                     && user.getUserTokenVersion() != null
                     && user.getUserTokenVersion().intValue() == ((Number) tokenVersionValue).intValue();
         } catch (ExpiredJwtException e) {
