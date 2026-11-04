@@ -55,6 +55,11 @@ function CommunityEdit() {
                 const result = await fetchPostDetail(postNum);
                 if (result && result.responseCode && result.responseCode.code === 200) {
                     const post = result.data;
+                    if (post.isBlinded) {
+                        await showAlert('관리자에 의해 블라인드 처리된 게시글은 수정할 수 없습니다.', { type: 'warning' });
+                        navigate(`/community/${postNum}`, { replace: true });
+                        return;
+                    }
                     // 작성자 본인인지 2차 검증 (프론트 단)
                     if (!user || user.userNum !== post.userNum) {
                         await showAlert('수정 권한이 없습니다.', { type: 'warning' });
@@ -186,7 +191,8 @@ function CommunityEdit() {
                 showAlert(result?.message || '수정에 실패했습니다.', { type: 'error' });
             }
         } catch (error) {
-            showAlert('서버와의 통신 오류가 발생했습니다.', { type: 'error' });
+            const message = error.response?.data?.data;
+            showAlert(typeof message === 'string' ? message : '서버와의 통신 오류가 발생했습니다.', { type: 'error' });
         } finally {
             setLoading(false);
         }

@@ -250,7 +250,7 @@ function CommunityDetail() {
                 
                 {(isAuthor || isAdmin) && (
                     <div className="gap-2 d-flex">
-                        {isAuthor && (
+                        {isAuthor && !post.isBlinded && (
                             <Link to={`/community/edit/${postNum}`} className="btn btn-sm btn-outline-primary px-3 py-1" style={{ fontSize: '0.85rem' }}>
                                 수정
                             </Link>

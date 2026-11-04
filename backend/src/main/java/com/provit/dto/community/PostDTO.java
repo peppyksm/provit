@@ -26,6 +26,7 @@ public class PostDTO {
     private Integer viewCount;     // 조회수
     private String postFile;       // 첨부 파일 URL (선택)
     private Boolean isLiked;       // 현재 로그인한 회원이 좋아요를 눌렀는지 여부
+    private Boolean isBlinded;     // 관리자 블라인드 여부 (서버 조회 결과)
 
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")

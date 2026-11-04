@@ -115,6 +115,10 @@ public class PostServiceImpl implements PostService {
     public void updatePost(PostDTO postDto) {
         int affectedRows = postDao.updatePost(postDto);
         if (affectedRows == 0) {
+            PostDTO existingPost = postDao.selectPostDetail(postDto.getPostNum());
+            if (existingPost != null && Boolean.TRUE.equals(existingPost.getIsBlinded())) {
+                throw new SecurityException("관리자에 의해 블라인드 처리된 게시글은 수정할 수 없습니다.");
+            }
             throw new IllegalArgumentException("게시글이 존재하지 않거나 권한이 없습니다.");
         }
     }
