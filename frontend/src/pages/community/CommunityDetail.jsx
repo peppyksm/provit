@@ -187,7 +187,7 @@ function CommunityDetail() {
                     {post.postFile && (
                         <div className="mb-4 text-center">
                             <img 
-                                src={`/uploads/post_uploadfile/${post.postFile}`} 
+                                src={`/uploads/post_uploadfile/${encodeURIComponent(post.postFile)}`}
                                 alt="첨부 이미지" 
                                 className="img-fluid rounded shadow-sm" 
                                 style={{ maxHeight: '500px' }}

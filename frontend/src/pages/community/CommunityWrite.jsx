@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPost, updatePost, deletePost } from '../../api/communityApi';
-import { uploadFile } from '../../api/fileApi';
+import { createPost, updatePost, deletePost, fetchPostDetail } from '../../api/communityApi';
+import { uploadFile, deleteFile } from '../../api/fileApi';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from 'rehype-sanitize';
+import { createPostWithAttachment } from './postAttachment';
 
 const CATEGORIES = [
     { id: 1, name: '질문' },
@@ -97,33 +98,10 @@ function CommunityWrite() {
                 userNum: user.userNum
             };
 
-            const result = await createPost(postDto);
+            const result = await createPostWithAttachment({ post: postDto, file }, {
+                createPost, updatePost, deletePost, uploadFile, deleteFile, fetchPostDetail,
+            });
             if (result && result.responseCode && result.responseCode.code === 200) {
-                const createdPostNum = result.data; // 서버가 반환한 생성된 글 번호
-                
-                // 3-Step: 첨부파일이 있는 경우 추가 업로드 진행
-                if (file) {
-                    try {
-                        const uploadResult = await uploadFile(file, 'post', createdPostNum);
-                        // 파일 업로드 성공 후, 글 정보 업데이트 (postFile 컬럼 저장)
-                        await updatePost({
-                            ...postDto,
-                            postNum: createdPostNum,
-                            postFile: uploadResult.savedFileName 
-                        });
-                    } catch (uploadError) {
-                        console.error("파일 업로드 실패:", uploadError);
-                        // 파일 업로드 실패 시 데이터 불일치 방지를 위해 생성된 게시글 롤백(삭제)
-                        try {
-                            await deletePost(createdPostNum);
-                        } catch (rollbackError) {
-                            console.error("롤백 처리 중 오류:", rollbackError);
-                        }
-                        showAlert("첨부파일 업로드 중 오류가 발생하여 게시글 등록이 취소되었습니다.", { type: 'error' });
-                        return; // 함수 강제 종료 (성공 알럿 띄우지 않음)
-                    }
-                }
-
                 showToast('게시글이 성공적으로 등록되었습니다.', 'success');
                 setIsDirty(false); // 서밋 성공 시 경고 해제
                 navigate('/community');
@@ -131,7 +109,12 @@ function CommunityWrite() {
                 showAlert(result?.message || '게시글 등록에 실패했습니다.', { type: 'error' });
             }
         } catch (error) {
-            showAlert('서버와의 통신 오류가 발생했습니다.', { type: 'error' });
+            const message = error.response?.data?.data;
+            await showAlert(typeof message === 'string' ? message : error.message || '서버와의 통신 오류가 발생했습니다.', { type: 'error' });
+            if (error.createdPostNum) {
+                setIsDirty(false);
+                navigate(`/community/${error.createdPostNum}`);
+            }
         } finally {
             setLoading(false);
         }
