@@ -2,6 +2,7 @@ package com.provit.controller.admin;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -40,7 +41,10 @@ public class AdminUserController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "status", required = false) String status) {
 
-        if (loginUserNum == null || !adminReportDAO.isAdmin(loginUserNum)) {
+        if (loginUserNum == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED));
+        }
+        if (!adminReportDAO.isAdmin(loginUserNum)) {
             throw new SecurityException("관리자 권한이 없습니다.");
         }
 
@@ -54,7 +58,10 @@ public class AdminUserController {
             @PathVariable("userNum") Long userNum,
             @RequestBody AdminUserRequestDTO requestDTO) {
 
-        if (loginUserNum == null || !adminReportDAO.isAdmin(loginUserNum)) {
+        if (loginUserNum == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED));
+        }
+        if (!adminReportDAO.isAdmin(loginUserNum)) {
             throw new SecurityException("관리자 권한이 없습니다.");
         }
 
