@@ -7,6 +7,7 @@ import { useModal } from '../../context/ModalContext';
 import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from 'rehype-sanitize';
 import { savePostAttachment } from './postAttachment';
+import { POST_CONTENT_MAX_BYTES, postContentBytes, postContentError } from './postContentLimit';
 
 const CATEGORIES = [
     { id: 1, name: '질문' },
@@ -33,6 +34,8 @@ function CommunityEdit() {
         postFile: ''
     });
     const [isDirty, setIsDirty] = useState(false); // 폼 수정 여부 추적
+    const contentBytes = postContentBytes(formData.postContent);
+    const contentError = postContentError(formData.postContent);
 
     // 브라우저 뒤로가기, 새로고침, 탭 닫기 감지 (Native Event)
     useEffect(() => {
@@ -146,6 +149,10 @@ function CommunityEdit() {
 
         if (!formData.postContent.trim()) {
             showAlert('내용을 입력해주세요.', { type: 'warning' });
+            return;
+        }
+        if (contentError) {
+            showAlert(contentError, { type: 'warning' });
             return;
         }
 
@@ -288,13 +295,17 @@ function CommunityEdit() {
                                     height={400}
                                 />
                             </div>
+                            <div className={`form-text ${contentError ? 'text-danger' : 'text-muted'}`} role={contentError ? 'alert' : undefined}>
+                                {contentBytes.toLocaleString()} / {POST_CONTENT_MAX_BYTES.toLocaleString()}바이트 (마크다운 포함)
+                                {contentError && <div>{contentError}</div>}
+                            </div>
                         </div>
 
                         <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                             <button type="button" className="btn btn-secondary px-4" onClick={handleCancel}>
                                 취소
                             </button>
-                            <button type="submit" className="btn btn-primary px-4" disabled={loading}>
+                            <button type="submit" className="btn btn-primary px-4" disabled={loading || Boolean(contentError)}>
                                 {loading ? '수정 중...' : '수정 완료'}
                             </button>
                         </div>
