@@ -62,6 +62,8 @@ function Fortune() {
         }
 
         if (pendingScraps.has(recruitmentNum)) return;
+        const previousStatus = Boolean(fortune?.recommendRecruitments
+            ?.find((item) => item.recruitmentNum === recruitmentNum)?.isScrapped);
 
         // 낙관적 UI 업데이트
         setFortune((prev) => {
@@ -70,7 +72,7 @@ function Fortune() {
                 ...prev,
                 recommendRecruitments: prev.recommendRecruitments.map((item) =>
                     item.recruitmentNum === recruitmentNum
-                        ? { ...item, isScrapped: item.isScrapped === 1 ? 0 : 1 }
+                        ? { ...item, isScrapped: !item.isScrapped }
                         : item,
                 ),
             };
@@ -80,19 +82,20 @@ function Fortune() {
 
         try {
             const res = await toggleJobScrap(recruitmentNum);
-            if (res && res.data) {
-                const finalStatus = res.data.isScrapped !== undefined ? res.data.isScrapped : res.data.scrapped;
-                showToast(finalStatus === 1 ? "공고를 스크랩했습니다." : "스크랩을 취소했습니다.", "info");
-                setFortune((prev) => {
-                    if (!prev || !prev.recommendRecruitments) return prev;
-                    return {
-                        ...prev,
-                        recommendRecruitments: prev.recommendRecruitments.map((item) =>
-                            item.recruitmentNum === recruitmentNum ? { ...item, isScrapped: finalStatus } : item,
-                        ),
-                    };
-                });
+            const finalStatus = res?.data?.isScrapped ?? res?.data?.scrapped;
+            if (res?.responseCode?.code !== 200 || typeof finalStatus !== 'boolean') {
+                throw new Error('스크랩 처리 결과를 확인하지 못했습니다.');
             }
+            showToast(finalStatus ? "공고를 스크랩했습니다." : "스크랩을 취소했습니다.", "info");
+            setFortune((prev) => {
+                if (!prev || !prev.recommendRecruitments) return prev;
+                return {
+                    ...prev,
+                    recommendRecruitments: prev.recommendRecruitments.map((item) =>
+                        item.recruitmentNum === recruitmentNum ? { ...item, isScrapped: finalStatus } : item,
+                    ),
+                };
+            });
         } catch (err) {
             console.error("스크랩 토글 실패:", err);
             // 실패 시 원복
@@ -102,7 +105,7 @@ function Fortune() {
                     ...prev,
                     recommendRecruitments: prev.recommendRecruitments.map((item) =>
                         item.recruitmentNum === recruitmentNum
-                            ? { ...item, isScrapped: item.isScrapped === 1 ? 0 : 1 }
+                            ? { ...item, isScrapped: previousStatus }
                             : item,
                     ),
                 };
@@ -365,9 +368,9 @@ function Fortune() {
                                                 </span>
                                                 <button
                                                     type="button"
-                                                    className={`job-scrap-btn ${job.isScrapped === 1 ? "active" : ""}`}
+                                                    className={`job-scrap-btn ${job.isScrapped ? "active" : ""}`}
                                                     title={
-                                                        job.isScrapped === 1
+                                                        job.isScrapped
                                                             ? "관심 공고 스크랩 취소"
                                                             : "관심 공고 스크랩 등록"
                                                     }
@@ -377,8 +380,8 @@ function Fortune() {
                                                 >
                                                     <Bookmark
                                                         size={17}
-                                                        fill={job.isScrapped === 1 ? "currentColor" : "none"}
-                                                        strokeWidth={job.isScrapped === 1 ? 2.5 : 2}
+                                                        fill={job.isScrapped ? "currentColor" : "none"}
+                                                        strokeWidth={job.isScrapped ? 2.5 : 2}
                                                     />
                                                 </button>
                                             </div>
