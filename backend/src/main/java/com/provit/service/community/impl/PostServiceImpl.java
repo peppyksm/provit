@@ -12,12 +12,14 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 게시판 비즈니스 로직을 실제 수행하는 서비스 구현체 (주방장)
  */
 @Service
 public class PostServiceImpl implements PostService {
+    private static final int POST_CONTENT_MAX_BYTES = 4000;
 
     private final PostDAO postDao;
     private final com.provit.dao.auth.UserDAO userDAO;
@@ -105,6 +107,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @org.springframework.transaction.annotation.Transactional
     public Long createPost(PostDTO postDto) {
+        validatePostContentLength(postDto);
         // DB에 삽입 (MyBatis selectKey 기능으로 postDto에 생성된 PK가 담김)
         postDao.insertPost(postDto);
         return postDto.getPostNum();
@@ -113,6 +116,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @org.springframework.transaction.annotation.Transactional
     public void updatePost(PostDTO postDto) {
+        validatePostContentLength(postDto);
         int affectedRows = postDao.updatePost(postDto);
         if (affectedRows == 0) {
             PostDTO existingPost = postDao.selectPostDetail(postDto.getPostNum());
@@ -140,5 +144,12 @@ public class PostServiceImpl implements PostService {
     @Override
     public java.util.List<PostDTO> getPopularPosts(int limit) {
         return postDao.selectPopularPosts(limit);
+    }
+
+    private void validatePostContentLength(PostDTO postDto) {
+        String content = postDto.getPostContent();
+        if (content != null && content.getBytes(StandardCharsets.UTF_8).length > POST_CONTENT_MAX_BYTES) {
+            throw new IllegalArgumentException("게시글 본문은 4,000바이트 이내로 입력해 주세요. 내용을 줄인 후 다시 저장해 주세요.");
+        }
     }
 }

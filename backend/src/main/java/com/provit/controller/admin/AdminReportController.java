@@ -25,8 +25,11 @@ public class AdminReportController {
             @LoginUser Long userNum) {
         
         try {
-            if (userNum == null || !adminReportService.isAdmin(userNum)) {
-                return ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED, "관리자 권한이 없습니다.");
+            if (userNum == null) {
+                return ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED);
+            }
+            if (!adminReportService.isAdmin(userNum)) {
+                return ApiResponse.error(ResponseCode.AUTH_FORBIDDEN, "관리자 권한이 없습니다.");
             }
 
             PageResponseDTO<AdminReportDTO> response = adminReportService.getReportList(page, size, status);
@@ -44,8 +47,11 @@ public class AdminReportController {
             @RequestBody AdminReportRequestDTO requestDTO,
             @LoginUser Long userNum) {
         
-        if (userNum == null || !adminReportService.isAdmin(userNum)) {
-            return ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED, "관리자 권한이 없습니다.");
+        if (userNum == null) {
+            return ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED);
+        }
+        if (!adminReportService.isAdmin(userNum)) {
+            return ApiResponse.error(ResponseCode.AUTH_FORBIDDEN, "관리자 권한이 없습니다.");
         }
 
         try {

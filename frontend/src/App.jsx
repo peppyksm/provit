@@ -124,7 +124,7 @@ function App() {
             <Route path="/community" element={<CommunityList />} />
             <Route path="/community/write" element={<CommunityWrite />} />
             <Route path="/community/:postNum" element={<CommunityDetail />} />
-            <Route path="/community/edit/:postNum" element={<CommunityEdit />} />
+            <Route path="/community/edit/:postNum" element={<RequireAuth alertMessage="로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다."><CommunityEdit /></RequireAuth>} />
             <Route path="/study" element={<Navigate to="/community?tab=study" replace />} />
             <Route path="/mypage" element={<RequireAuth><MyPage /></RequireAuth>} />
             <Route path="/document-review" element={<RequireAuth alertMessage="로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다."><DocumentReview /></RequireAuth>} />

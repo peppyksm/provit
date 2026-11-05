@@ -110,10 +110,13 @@ public class RecruitmentPostController {
 			@RequestParam(value = "limit", defaultValue = "1000") int limit) {
 		log.info(">> [/api/recruitment/sync] 채용 공고 수동 동기화 요청 수신 (목표 상한: {}건)", limit);
 
+		if (getAuthenticatedUserNum(request) == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED));
+		}
 		if (!isAdmin(request)) {
 			log.warn(">> [/api/recruitment/sync] 미인가 접근 차단 (관리자 권한 없음)");
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
-					.body(new ApiResponse<>(ResponseCode.AUTH_UNAUTHORIZED, "관리자(ADMIN) 권한이 필요한 요청입니다."));
+					.body(new ApiResponse<>(ResponseCode.AUTH_FORBIDDEN, "관리자(ADMIN) 권한이 필요한 요청입니다."));
 		}
 
 		int syncedCount = recruitmentService.syncSaraminRecruitments(limit);
@@ -128,10 +131,13 @@ public class RecruitmentPostController {
 	public ResponseEntity<ApiResponse<String>> deactivateExpiredRecruitments(HttpServletRequest request) {
 		log.info(">> [/api/recruitment/expire] 마감 공고 수동 비활성화 요청 수신");
 
+		if (getAuthenticatedUserNum(request) == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(ResponseCode.AUTH_UNAUTHORIZED));
+		}
 		if (!isAdmin(request)) {
 			log.warn(">> [/api/recruitment/expire] 미인가 접근 차단 (관리자 권한 없음)");
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
-					.body(new ApiResponse<>(ResponseCode.AUTH_UNAUTHORIZED, "관리자(ADMIN) 권한이 필요한 요청입니다."));
+					.body(new ApiResponse<>(ResponseCode.AUTH_FORBIDDEN, "관리자(ADMIN) 권한이 필요한 요청입니다."));
 		}
 
 		int count = recruitmentService.deactivateExpiredRecruitments();

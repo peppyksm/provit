@@ -104,7 +104,7 @@ public class FileUploadController {
         } catch (SecurityException e) {
             log.warn(">> [/api/upload/{}] 리소스 소유권 검증 실패 (BOLA/IDOR 차단): {}", categoryName, e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse<>(ResponseCode.AUTH_UNAUTHORIZED, null));
+                    .body(new ApiResponse<>(ResponseCode.AUTH_FORBIDDEN, null));
         } catch (Exception e) {
             log.error(">> [/api/upload/{}] 파일 업로드 서버 오류 발생: {}", categoryName, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -151,7 +151,7 @@ public class FileUploadController {
         } catch (SecurityException e) {
             log.warn(">> [/api/upload/{}/{}] 파일 삭제 권한 없음: {}", categoryName, savedFileName, e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse<>(ResponseCode.AUTH_UNAUTHORIZED, e.getMessage()));
+                    .body(new ApiResponse<>(ResponseCode.AUTH_FORBIDDEN, e.getMessage()));
         } catch (Exception e) {
             log.error(">> [/api/upload/{}/{}] 파일 삭제 처리 중 서버 오류: {}", categoryName, savedFileName, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
